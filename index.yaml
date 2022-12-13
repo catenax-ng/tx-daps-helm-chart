@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  daps-server:
+  - apiVersion: v2
+    appVersion: 1.7.1
+    created: "2022-12-13T12:26:20.960404914Z"
+    description: DAPS server helm-chart
+    digest: 6fcc91b6aa87c84934c2dc004aef1e51967bc57fb7748ee3196f8b777645cb5f
+    name: daps-server
+    type: application
+    urls:
+    - https://github.com/catenax-ng/tx-daps-helm-chart/releases/download/daps-server-1.7.2/daps-server-1.7.2.tgz
+    version: 1.7.2
+generated: "2022-12-13T12:26:20.960413014Z"
