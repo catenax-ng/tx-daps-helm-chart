@@ -62,7 +62,7 @@ init:
     # -- Image pull policy
     pullPolicy: IfNotPresent
     # -- Image tag. Overrides the image tag whose default is the chart appVersion.
-    tag: ""
+    tag: "3.17.3"
   # -- Pod security context configuration
   securityContext:
     # capabilities:
