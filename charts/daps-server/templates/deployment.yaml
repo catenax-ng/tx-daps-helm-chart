@@ -30,7 +30,7 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       initContainers:
       - name: init-fill-pvc
-        image: "{{ .Values.init.image.repository }}:{{ .Values.init.image.tag | default .Chart.init.AppVersion }}"
+        image: "{{ .Values.init.image.repository }}:{{ .Values.init.image.tag }}"
         imagePullPolicy: {{ .Values.init.image.pullPolicy }}
         securityContext:
           {{- toYaml .Values.init.securityContext | nindent 10 }}
