@@ -41,6 +41,14 @@ ingress:
       # -- Cert-manager issuer name
       issuer: "letsencrypt-prod"
 
+resources:
+  limits:
+    cpu: 800m
+    memory: 800Mi
+  requests:
+    cpu: 400m
+    memory: 800Mi
+    
 daps:
   secret:
     clientId: "<path:essential-services/data/daps-stable#clientId>"

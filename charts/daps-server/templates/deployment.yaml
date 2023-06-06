@@ -1,17 +1,17 @@
-{{- $fullName := include "daps-server.fullname" . -}}
+{{- $fullName := include "omejdn-server.fullname" . -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "daps-server.fullname" . }}
+  name: {{ include "omejdn-server.fullname" . }}
   labels:
-    {{- include "daps-server.labels" . | nindent 4 }}
+    {{- include "omejdn-server.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "daps-server.selectorLabels" . | nindent 6 }}
+      {{- include "omejdn-server.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -19,65 +19,65 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "daps-server.selectorLabels" . | nindent 8 }}
+        {{- include "omejdn-server.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "daps-server.serviceAccountName" . }}
+      serviceAccountName: {{ include "omejdn-server.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       initContainers:
       - name: init-fill-pvc
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-        securityContext:
-          {{- toYaml .Values.securityContext | nindent 10 }}
+        image: alpine
         command: 
         - "sh"
         - "-c"
         args:
         - |
-          mkdir -p /tmp/config /tmp/keys
-          # ls /tmp/
-          if [ ! -f /tmp/config/users.yml ]; then
+          ls /tmp/
+          # if [ ! -f /tmp/users.yml ]; then
             echo "File users.yml not found in pvc!. Creating empty file"
-            touch /tmp/config/users.yml
-          fi
+            touch /tmp/users.yml
+          # fi
           if [ -d /tmp/key.pem ]; then
             echo "Fix key is directory"
             rm -rf /tmp/key.pem
           fi
           if [ ! -f /tmp/key.pem ]; then
             echo "File key.pem not found in pvc!. Generating new key!"
+            apk add openssl
             openssl genrsa -out /tmp/key.pem 1024
           fi
-          if [ ! -f /tmp/config/clients.yml ]; then
+          if [ ! -f /tmp/clients.yml ]; then
             echo "File clients.yml not found in pvc! Creating a new one with default admin client"
             {{- if .Values.omejdn.createDefaultAdmin }}
-            cp /tmp2/clients.yml /tmp/config/clients.yml
+            cp /tmp2/clients.yml /tmp/clients.yml
             {{- else }}
-            touch /tmp/config/clients.yml
+            touch /tmp/clients.yml
             {{- end }}
           fi
-          # mounting as configmap is not an option as server expects this file writeable
-          if [ ! -f /tmp/config/omejdn.yml ]; then
+          if [ ! -f /tmp/omejdn.yml ]; then
             echo "File omejdn.yml not found in pvc! Creating a new one with default admin client"
             {{- if .Values.omejdn.createDefaultAdmin }}
-            cp /tmp2/omejdn.yml /tmp/config/omejdn.yml
+            cp /tmp2/omejdn.yml /tmp/omejdn.yml
             {{- else }}
-            touch /tmp/config/omejdn.yml
+            touch /tmp/omejdn.yml
             {{- end }}
           fi
-          if [ ! -f /tmp/config/scope_mapping.yml ]; then
+          if [ ! -f /tmp/scope_mapping.yml ]; then
             echo "File scope_mapping.yml not found in pvc! Creating a new one with default admin client"
             {{- if .Values.omejdn.createDefaultAdmin }}
-            cp /tmp2/scope_mapping.yml /tmp/config/scope_mapping.yml
+            cp /tmp2/scope_mapping.yml /tmp/scope_mapping.yml
             {{- else }}
-            touch /tmp/config/scope_mapping.yml
+            touch /tmp/scope_mapping.yml
             {{- end }}
           fi
+          if [ ! -d /tmp/keys ]; then
+            echo "keys directory not found in pvc! Creating empty dit"
+            mkdir /tmp/keys
+          fi      
         volumeMounts:
         - name: config
           mountPath: /tmp/
@@ -128,7 +128,7 @@ spec:
           {{- end}}
           ports:
             - name: http
-              containerPort: {{ .Values.service.targetPort }}
+              containerPort: 4567
               protocol: TCP
           #livenessProbe:
           #  httpGet:
@@ -147,10 +147,6 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
-          - mountPath: {{ .Values.omejdn.serverKeyFolderPath }}/config
-            name: config
-            subPath: config
-            readOnly: false
           - mountPath: {{ .Values.omejdn.serverKeyFolderPath }}/config/plugins.yml
             name: plugins-config
             subPath: plugins.yml
@@ -158,6 +154,22 @@ spec:
           - mountPath: {{ .Values.omejdn.serverKeyFolderPath }}/key.pem
             name: config
             subPath: key.pem
+          - mountPath: {{ .Values.omejdn.serverKeyFolderPath }}/config/users.yml
+            name: config
+            subPath: users.yml
+            readOnly: false
+          - mountPath: {{ .Values.omejdn.serverKeyFolderPath }}/config/clients.yml
+            name: config
+            subPath: clients.yml
+            readOnly: false
+          - mountPath: {{ .Values.omejdn.serverKeyFolderPath }}/config/omejdn.yml
+            name: config
+            subPath: omejdn.yml
+            readOnly: false
+          - mountPath: {{ .Values.omejdn.serverKeyFolderPath }}/config/scope_mapping.yml
+            name: config
+            subPath: scope_mapping.yml
+            readOnly: false
           - mountPath: {{ .Values.omejdn.serverKeyFolderPath }}/keys
             name: config
             subPath: keys
@@ -178,36 +190,36 @@ spec:
       volumes:
       - name: config
         persistentVolumeClaim:
-          claimName: {{ include "daps-server.fullname" . }}
+          claimName: {{ include "omejdn-server.fullname" . }}
       {{- if .Values.omejdn.serverKey }}
       - name: server-key
         secret:
-          secretName: {{ include "daps-server.fullname" . }}
+          secretName: {{ include "omejdn-server.fullname" . }}
           items:
           - key: key.pem
             path: key.pem
       {{- end }}
       - name: plugins-config
         configMap:
-          name: {{ include "daps-server.fullname" . }}
+          name: {{ include "omejdn-server.fullname" . }}
           items:
           - key: plugins.yml
             path: plugins.yml
       - name: omejdn-config
         configMap:
-          name: {{ include "daps-server.fullname" . }}
+          name: {{ include "omejdn-server.fullname" . }}
           items:
           - key: omejdn.yml
             path: omejdn.yml
       - name: scope-mapping-config
         configMap:
-          name: {{ include "daps-server.fullname" . }}
+          name: {{ include "omejdn-server.fullname" . }}
           items:
           - key: scope_mapping.yml
             path: scope_mapping.yml
       - name: clients-config
         configMap:
-          name: {{ include "daps-server.fullname" . }}
+          name: {{ include "omejdn-server.fullname" . }}
           items:
           - key: clients.yml
             path: clients.yml
