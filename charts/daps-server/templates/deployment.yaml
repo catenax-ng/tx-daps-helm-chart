@@ -1,17 +1,17 @@
-{{- $fullName := include "omejdn-server.fullname" . -}}
+{{- $fullName := include "daps-server.fullname" . -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "omejdn-server.fullname" . }}
+  name: {{ include "daps-server.fullname" . }}
   labels:
-    {{- include "omejdn-server.labels" . | nindent 4 }}
+    {{- include "daps-server.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "omejdn-server.selectorLabels" . | nindent 6 }}
+      {{- include "daps-server.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -19,13 +19,13 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "omejdn-server.selectorLabels" . | nindent 8 }}
+        {{- include "daps-server.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "omejdn-server.serviceAccountName" . }}
+      serviceAccountName: {{ include "daps-server.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       initContainers:
@@ -190,36 +190,36 @@ spec:
       volumes:
       - name: config
         persistentVolumeClaim:
-          claimName: {{ include "omejdn-server.fullname" . }}
+          claimName: {{ include "daps-server.fullname" . }}
       {{- if .Values.omejdn.serverKey }}
       - name: server-key
         secret:
-          secretName: {{ include "omejdn-server.fullname" . }}
+          secretName: {{ include "daps-server.fullname" . }}
           items:
           - key: key.pem
             path: key.pem
       {{- end }}
       - name: plugins-config
         configMap:
-          name: {{ include "omejdn-server.fullname" . }}
+          name: {{ include "daps-server.fullname" . }}
           items:
           - key: plugins.yml
             path: plugins.yml
       - name: omejdn-config
         configMap:
-          name: {{ include "omejdn-server.fullname" . }}
+          name: {{ include "daps-server.fullname" . }}
           items:
           - key: omejdn.yml
             path: omejdn.yml
       - name: scope-mapping-config
         configMap:
-          name: {{ include "omejdn-server.fullname" . }}
+          name: {{ include "daps-server.fullname" . }}
           items:
           - key: scope_mapping.yml
             path: scope_mapping.yml
       - name: clients-config
         configMap:
-          name: {{ include "omejdn-server.fullname" . }}
+          name: {{ include "daps-server.fullname" . }}
           items:
           - key: clients.yml
             path: clients.yml
