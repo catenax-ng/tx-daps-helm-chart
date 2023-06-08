@@ -125,7 +125,7 @@ persistence:
   # -- If `true` persistent volume will be used to store clients and users configuration
   enabled: true
   # -- Storage class, defaults to none specified.
-  storageClass: ""
+  storageClass: "azurefile"
   # -- Storage accessMode, defaults to ReadWriteOnce.
   accessMode: []
   # -- Volume size
